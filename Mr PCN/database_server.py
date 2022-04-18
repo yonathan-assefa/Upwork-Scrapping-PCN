@@ -73,7 +73,10 @@ userInfo = {
 try:
     createtable()
 except mysql.connector.Error as err:
-    print(err)
+    if err == "1050 (42S01): Table 'user_info' already exists":
+        print("Connection to the database was successful...")
+    else:
+        print(err)
 
 # addtodb(userInfo)
 # updatedb(userInfo)
