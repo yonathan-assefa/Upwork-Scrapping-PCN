@@ -73,22 +73,28 @@ for pcn_number in pcn_numbers:
                 subdivision = soup.find('span', id='MainContent_lblSubdiv').text
                 legal_description = soup.find('span', id='MainContent_lblLegalDesc').text
 
-                trash = ''
-                for row in soup.find_all('tr'):
-                    t_datas = row.find('td')
-                    try:
-                        trash+=t_datas.text
-                    except:pass
-                # search a string starting wiht owner(s) using regex
-                owner_name = re.findall(r'Owner(.*?)\n', trash)[0][3:]
-                userInfo = {
-                    'location_address': location_address,
-                    'pcn': pcn,
-                    'subdivision': subdivision,
-                    'legal_description': legal_description,
-                    'owner_name': owner_name
-                }
-                addtodb(userInfo=userInfo)
+                sc_list = []
+                tbs = soup.find_all("table", {'width':'100%', 'cellspacing':'0', 'cellpadding':'1'})
+                for i in tbs:
+                    for m in i.find_all('tr'):
+                        for j in m.find_all('td', {'class': 'TDValueLeft', 'colspan': '2'}):
+                            sc_list.append(j.text)
+
+                owners_name = []
+                for i in sc_list:
+                    if i.startswith('\n'):
+                        break
+                    else:
+                        owners_name.append(i)
+                for owner_name in owners_name:
+                    userInfo = {
+                        'location_address': location_address,
+                        'pcn': pcn,
+                        'subdivision': subdivision,
+                        'legal_description': legal_description,
+                        'owner_name': owner_name
+                    }
+                    addtodb(userInfo=userInfo)
 
 
             for pc_nums in sc_list:
