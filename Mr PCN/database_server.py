@@ -34,6 +34,14 @@ def createtable():
     return "The database was created Sucessfully"
 
 
+# check if owner exists in the database
+def check_address(address):
+    global cursor
+    cursor.execute(f"SELECT * FROM {db_table} WHERE owner_name = %s", (address,))
+    if cursor.rowcount > 0:
+        return True
+    else:
+        return False
 
 # This is redirect takes care of updating the database
 
@@ -49,6 +57,15 @@ def updatedb(userInfo):
     db.commit()
 
     return f"The database was updated Sucessfully, {cursor.rowcount} rows were updated"
+
+# check if data exists in the database
+def check_owner(owner_name):
+    global cursor
+    cursor.execute(f"SELECT * FROM {db_table} WHERE pcn = %s", (owner_name,))
+    if cursor.rowcount > 0:
+        return True
+    else:
+        return False
 
 userInfo = {
     'owner_name': 'somedude',
@@ -73,7 +90,7 @@ userInfo = {
 try:
     createtable()
 except mysql.connector.Error as err:
-    if err == "1050 (42S01): Table 'user_info' already exists":
+    if err == 1061:
         print("Connection to the database was successful...")
     else:
         print(err)
