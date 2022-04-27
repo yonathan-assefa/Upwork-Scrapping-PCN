@@ -19,7 +19,7 @@ from .models import PCN
 
 
 def home(request):
-    return render(request, "home.html")
+    return render(request, "base.html")
 
 def scrap_data(pcn_list):
     pcn_numbers = pcn_list

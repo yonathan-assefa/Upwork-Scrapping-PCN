@@ -6,5 +6,5 @@ app_name = 'scrapper'
 urlpatterns = [
     path('scrap/', ScrapView.as_view(), name='scrap'),
     path('fill-email/', FillEmailView.as_view(), name='fillemail'),
-    path('home/', home, name='home'),
+    path('', home, name='home'),
 ]

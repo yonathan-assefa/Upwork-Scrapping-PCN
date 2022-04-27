@@ -1,14 +1,14 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<script src="{% static 'js/progress.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/styles.css' %">
+{% block scrapper %}
 
-<div id="progress-wrapper">
+
+<div class="mb-3">
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {{form.as_p}}
-        <button id="progress-bar-trigger" type="submit" >Submit</button>
+        <button class="btn btn-success" type="submit" >Submit</button>
     </form>
-    <div id="progress-bar" style="background-color: blue; width: 0%;">&nbsp;</div>
-    <div id="progress-bar-message">Waiting for progress to start...</div>
 </div>
+{% endblock %}
