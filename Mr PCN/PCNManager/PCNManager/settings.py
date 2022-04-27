@@ -129,3 +129,5 @@ MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
  
 HOME = 'scrapper:home'
+
+ADMIN_SITE_HEADER = "PCN Administration"

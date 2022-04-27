@@ -14,7 +14,7 @@ import pandas as pd
 # load variables from __init__.py
 from scrapper import browser
 
-from .forms import PCNForm
+from .forms import PCNForm, EmailForm
 from .models import PCN
 
 
@@ -73,6 +73,8 @@ def scrap_data(pcn_list):
                             owners_name.append(i)
                     for owner_name in owners_name:
                         # save the data to the PCN table
+                        if '&' in owner_name:
+                            owner_name = owner_name.replace('&', '')
                         PCN.objects.create(
                             pcn = pcn,
                             owner = owner_name,
@@ -104,7 +106,6 @@ class ScrapView(View):
         if form.is_valid():
             form = form.cleaned_data
             pcn = form.get('pcn')
-            # pcn_file = form.get('pcn_file')
             pcn_file = request.FILES['pcn_file']
             pcn_list = []
             if pcn_file:
@@ -116,6 +117,28 @@ class ScrapView(View):
             scrap_data(pcn_list)
         form = PCNForm(request.POST, request.FILES)
         return render(request, self.template_name, {'form': form})
+
+class FillEmailView(View):
+    template_name = 'fill_email.html'
+    success_url = 'home'
+
+    def get(self, request):
+        form = EmailForm(request.POST or None, request.FILES or None)
+        return render(request, self.template_name, {'form': form})
+    
+    def post(self, request):
+        form = EmailForm(request.POST, request.FILES)
+        if form.is_valid():
+            form = form.cleaned_data
+            email_file = request.FILES['email']
+            email_csv = pd.read_csv(email_file)
+            email_list = email_csv['email'].tolist()
+            owner_list = email_csv['owner'].tolist()
+            for owner, email in zip(owner_list, email_list):
+                PCN.objects.filter(owner=owner).update(email=email)
+        form = EmailForm(request.POST, request.FILES)
+        return render(request, self.template_name, {'form': form})
+
 
 
 
