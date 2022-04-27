@@ -9,34 +9,14 @@ import time
 import re
 import requests
 
+import pandas as pd
+
 # load variables from __init__.py
 from scrapper import browser
 
 from .forms import PCNForm
 from .models import PCN
 
-
-def clean_data(pcn_number, pcn_file):
-    """
-    Clean data from form
-    """
-    pcn = pcn_number
-    pcn_file = pcn_file
-    
-    pcn_list = []
-
-    
-    # read pcn_file and get pcn list
-    if pcn_file:
-        with open(pcn_file, 'r') as f:
-            pcn_list = f.read().splitlines()
-    if pcn:
-        pcn_list.append(pcn)
-    
-    # check if each pcn list is unique
-    pcn_list = list(set(pcn_list))
-
-    return pcn_list
 
 def home(request):
     return render(request, "home.html")
@@ -46,7 +26,6 @@ def scrap_data(pcn_list):
     for pcn_number in pcn_numbers:
         print("Fetching data for " + pcn_number)
         browser.get(f'https://www.pbcgov.org/papa/Asps/GeneralAdvSrch/NewSearchResults.aspx?srchType=MASTER&proptype=RE&srchVal={pcn_number}&srchPCN=')
-
 
         loops = (int(browser.find_element(By.XPATH, '/html/body/form/div[3]/div/div/div[1]/table/tbody/tr[1]/td/table/tbody/tr/td[2]/i/b[3]').text) // 100) + 1 
         for pages in range(loops):
@@ -102,7 +81,7 @@ def scrap_data(pcn_list):
                             legal_description = legal_description,
                             control_number = pc_num
                         ).save()
-                        
+
                 for pc_nums in sc_list:
                     get_user_info(pc_nums)
 
@@ -125,9 +104,15 @@ class ScrapView(View):
         if form.is_valid():
             form = form.cleaned_data
             pcn = form.get('pcn')
-            pcn_file = form.get('pcn_file')
-            pcn_list = clean_data(pcn, pcn_file)
-            print(pcn_list)
+            # pcn_file = form.get('pcn_file')
+            pcn_file = request.FILES['pcn_file']
+            pcn_list = []
+            if pcn_file:
+                pcn_csv = pd.read_csv(pcn_file)
+                pcn_list = pcn_csv['pcn'].tolist()
+            if pcn:
+                pcn_list.append(pcn)        
+            
             scrap_data(pcn_list)
         form = PCNForm(request.POST, request.FILES)
         return render(request, self.template_name, {'form': form})
