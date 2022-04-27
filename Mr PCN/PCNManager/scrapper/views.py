@@ -1,5 +1,10 @@
+from logging import exception
+
 from django.shortcuts import redirect, render
+
 from django.views.generic import View
+from django.views.generic.list import ListView
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -34,7 +39,7 @@ def scrap_data(pcn_list):
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').click()
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').send_keys('100')
 
-                time.sleep(3)
+                time.sleep(2)
 
                 soup = BeautifulSoup(browser.page_source, 'html.parser')
 
@@ -75,14 +80,20 @@ def scrap_data(pcn_list):
                         # save the data to the PCN table
                         if '&' in owner_name:
                             owner_name = owner_name.replace('&', '')
-                        PCN.objects.create(
-                            pcn = pcn,
-                            owner = owner_name,
-                            location = location_address,
-                            subdivision = subdivision,
-                            legal_description = legal_description,
-                            control_number = pc_num
-                        ).save()
+                        print(owner_name)
+                        try:
+                            PCN.objects.create(
+                                pcn = pcn,
+                                owner = owner_name,
+                                location = location_address,
+                                subdivision = subdivision,
+                                legal_description = legal_description,
+                                control_number = pc_num
+                            ).save()
+                        except Exception as e:
+                            print(e, "error")
+                            pass
+                        
 
                 for pc_nums in sc_list:
                     get_user_info(pc_nums)
@@ -106,7 +117,7 @@ class ScrapView(View):
         if form.is_valid():
             form = form.cleaned_data
             pcn = form.get('pcn')
-            pcn_file = request.FILES['pcn_file']
+            pcn_file = form.get('pcn_file')
             pcn_list = []
             if pcn_file:
                 pcn_csv = pd.read_csv(pcn_file)
@@ -139,6 +150,10 @@ class FillEmailView(View):
         form = EmailForm(request.POST, request.FILES)
         return render(request, self.template_name, {'form': form})
 
-
+class PCNListView(ListView):
+    model = PCN
+    paginate_by = 50
+    template_name = 'pcn_list.html'
+    context_object_name = 'pcn_list'
 
 
