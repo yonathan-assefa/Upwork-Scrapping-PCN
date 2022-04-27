@@ -47,10 +47,11 @@ def scrap_data(pcn_list):
         print("Fetching data for " + pcn_number)
         browser.get(f'https://www.pbcgov.org/papa/Asps/GeneralAdvSrch/NewSearchResults.aspx?srchType=MASTER&proptype=RE&srchVal={pcn_number}&srchPCN=')
 
+
         loops = (int(browser.find_element(By.XPATH, '/html/body/form/div[3]/div/div/div[1]/table/tbody/tr[1]/td/table/tbody/tr/td[2]/i/b[3]').text) // 100) + 1 
         for pages in range(loops):
             try:
-                print(f'Fetching data for page {pages+1}')
+                print("search.text")
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').click()
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').send_keys('100')
 
@@ -78,33 +79,37 @@ def scrap_data(pcn_list):
                     subdivision = soup.find('span', id='MainContent_lblSubdiv').text
                     legal_description = soup.find('span', id='MainContent_lblLegalDesc').text
 
-                    trash = ''
-                    for row in soup.find_all('tr'):
-                        t_datas = row.find('td')
-                        try:
-                            trash+=t_datas.text
-                        except:pass
-                    # search a string starting wiht owner(s) using regex
-                    owner_name = re.findall(r'Owner(.*?)\n', trash)[0][3:]
-                    userInfo = {
-                        'location_address': location_address,
-                        'pcn': pcn,
-                        'subdivision': subdivision,
-                        'legal_description': legal_description,
-                        'owner_name': owner_name
-                    }
-                    # save the data to the PCN table
-                    PCN.objects.create(
-                        pcn = pcn,
-                        owner = owner_name,
-                        location = location_address,
-                        subdivision = subdivision,
-                        legal_description = legal_description,
-                        control_number = pc_num
-                    ).save()
+                    sc_list = []
+                    tbs = soup.find_all("table", {'width':'100%', 'cellspacing':'0', 'cellpadding':'1'})
+                    for i in tbs:
+                        for m in i.find_all('tr'):
+                            for j in m.find_all('td', {'class': 'TDValueLeft', 'colspan': '2'}):
+                                sc_list.append(j.text)
 
+                    owners_name = []
+                    for i in sc_list:
+                        if i.startswith('\n'):
+                            break
+                        else:
+                            owners_name.append(i)
+                    for owner_name in owners_name:
+                        # save the data to the PCN table
+                        PCN.objects.create(
+                            pcn = pcn,
+                            owner = owner_name,
+                            location = location_address,
+                            subdivision = subdivision,
+                            legal_description = legal_description,
+                            control_number = pc_num
+                        ).save()
+                        
+                for pc_nums in sc_list:
+                    get_user_info(pc_nums)
+
+                browser.find_element(By.PARTIAL_LINK_TEXT,value="Next").click()
             except:
                 print("Something went wrong")
+
 
 
 class ScrapView(View):
