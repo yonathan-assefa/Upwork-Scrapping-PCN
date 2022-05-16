@@ -87,12 +87,11 @@ userInfo = {
 }
 
 
-try:
-    createtable()
-except mysql.connector.Error as err:
-    if err == 1061:
-        print("Connection to the database was successful...")
-    else:
+if __name__ == '__main__':
+    try:
+        createtable()
+    except mysql.connector.Error as err:
+        
         print(err)
 
 # addtodb(userInfo)
