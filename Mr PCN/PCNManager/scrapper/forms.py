@@ -15,7 +15,7 @@ class PCNForm(forms.Form):
 
 class EmailForm(forms.Form):
     email = forms.FileField(required=True)
-
+    phone = forms.TextInput()
     # use bootstrap form
     def __init__(self, *args, **kwargs):
         super(EmailForm, self).__init__(*args, **kwargs)

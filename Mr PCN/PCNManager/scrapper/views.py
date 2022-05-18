@@ -1,5 +1,3 @@
-from logging import exception
-
 from django.shortcuts import redirect, render
 
 from django.views.generic import View
@@ -20,7 +18,7 @@ import pandas as pd
 from scrapper import browser
 
 from .forms import PCNForm, EmailForm
-from .models import PCN
+from .models import PCN, directory
 
 
 def home(request):
@@ -82,14 +80,30 @@ def scrap_data(pcn_list):
                             owner_name = owner_name.replace('&', '')
                         print(owner_name)
                         try:
-                            PCN.objects.create(
-                                pcn = pcn,
-                                owner = owner_name,
-                                location = location_address,
-                                subdivision = subdivision,
-                                legal_description = legal_description,
-                                control_number = pc_num
-                            ).save()
+                            # if the data exists in the database, overwrite it
+                            data = PCN.objects.filter(pcn=pcn, owner=owner_name, location=location_address, control_number=pc_num)
+                            if data:
+                                data.update(subdivision=subdivision, legal_description=legal_description)
+                                print("already exists")
+                            else:
+                                print("saving new")
+                                to_be = PCN.objects.create(
+                                    pcn = pcn,
+                                    owner = owner_name,
+                                    location = location_address,
+                                    subdivision = subdivision,
+                                    legal_description = legal_description,
+                                    control_number = pc_num
+                                )
+                                
+                                # for i in owner_name.split():
+                                e_p_data = directory.objects.filter(address__icontains=location_address.split()[0])[0]
+                                print("found ",  e_p_data)
+                                if e_p_data:
+                                    to_be.email = e_p_data.email
+                                    to_be.phone = f"{e_p_data.phone1}, {e_p_data.phone2}"
+                
+                                to_be.save()
                         except Exception as e:
                             print(e, "error")
                             pass
@@ -152,7 +166,7 @@ class FillEmailView(View):
 
 class PCNListView(ListView):
     model = PCN
-    paginate_by = 50
+    # paginate_by = 100
     template_name = 'pcn_list.html'
     context_object_name = 'pcn_list'
 
