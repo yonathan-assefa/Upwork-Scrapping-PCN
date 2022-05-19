@@ -144,3 +144,6 @@ STATIC_URL = '/static/'
 HOME = 'scrapper:home'
 
 ADMIN_SITE_HEADER = "PCN Administration"
+
+FLNAME = BASE_DIR / 'a.docx'
+PDF_PATH = BASE_DIR / 'scrapper/pdf'

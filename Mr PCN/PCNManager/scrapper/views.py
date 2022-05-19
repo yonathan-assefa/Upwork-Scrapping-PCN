@@ -1,10 +1,14 @@
+
 from django.shortcuts import redirect, render
 
 from django.views.generic import View
 from django.views.generic.list import ListView
 
 
-from selenium import webdriver
+import docx
+
+import tempfile, shutil, os
+
 from selenium.webdriver.common.by import By
 
 from bs4 import BeautifulSoup
@@ -20,6 +24,9 @@ from scrapper import browser
 from .forms import PCNForm, EmailForm
 from .models import PCN, directory
 
+from django.conf import settings
+
+from docx2pdf import convert 
 
 def home(request):
     return render(request, "base.html")
@@ -171,3 +178,68 @@ class PCNListView(ListView):
     context_object_name = 'pcn_list'
 
 
+def generate_pdf(request):
+# convert html file to pdf using weasyprint
+    def create_temporary_copy(path):
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, 'temp_file_name')
+        shutil.copy2(path, temp_path)
+        return temp_path
+
+    data = PCN.objects.all()
+    FLNAME = settings.FLNAME
+    for i in data:
+        
+        
+        mydoc = docx.Document(create_temporary_copy(FLNAME))
+        x = mydoc.add_paragraph("WRITTEN CONSENT")
+
+        par = [f"I, __{i.owner}__ owner (and/or authorized representative of Florida Limited Liability Company or Florida Corporation owning a LOT in Boca Pointe Community Association) of LOT __{i.location}__ with legal description of: __{' '.join(i.legal_description.split())}__ in Boca Pointe Community Association Inc. hereby gives consent for revival of the Declaration of Covenants, Conditions, Restrictions and Easements of Boca Pointe Community Association pursuant to section 720.405(6), Florida Statutes.", "Owner (or authorization representative of Florida entity owning a property / LOT in Boca Pointe Community Association",
+        "Signature: ______________________________",
+        f"Print Name: __{i.owner}__      Date:  _____________________",
+        "Title:Owner",
+        "Florida Limited Liability Company name (if applicable):  ______________________________"
+        ]
+        # font style for x
+        x.runs[0].font.name = 'Garamond'
+        x.runs[0].font.size = docx.shared.Pt(12)
+        x.runs[0].font.bold = True
+        # align center
+        x.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER
+
+        for j in par:
+            # font style for x
+            # avoid new lines
+            p = mydoc.add_paragraph(j, style='Normal')
+            p.runs[0].font.name = 'Garamond'
+            p.runs[0].font.size = docx.shared.Pt(12)
+            # justify
+            p.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+            #bold
+            if j.startswith(i.owner.split()[0]) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
+                
+                p.runs[0].font.bold = True
+                p.runs[0].font.underline = True
+            
+            # align center
+        # save mydoc as pdf
+        mydoc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+        # convert docx to pdf
+        # doc = docx.Document(f"{i.owner}_{i.location}.docx")
+        convert(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx", f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf")
+        # doc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.pdf")
+        # delete docx file
+        os.remove(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+        # send pdf to user
+        # mydoc.save(f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf", format='application/pdf')
+
+        
+
+        #convert a single docx file to pdf file in same directory
+
+        print('>>>>>>>>>>>>>>>>>>>')
+        #convert docx to pdf specifying input & output paths
+        # convert(FLNAME,f'{settings.PDF_PATH}/{i.owner}.pdf')
+        print('>>>>>>>>>>>>>>>>>>')
+
+      

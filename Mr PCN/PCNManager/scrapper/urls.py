@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ScrapView, FillEmailView, home, PCNListView
+from .views import ScrapView, FillEmailView, home, PCNListView, generate_pdf
 
 
 app_name = 'scrapper'
@@ -9,4 +9,5 @@ urlpatterns = [
     path('', home, name='home'),
 
     path('pcn-list/', PCNListView.as_view(), name='pcnlist'),
+    path('generate-pdf/', generate_pdf, name='generatepdf'),
 ]
