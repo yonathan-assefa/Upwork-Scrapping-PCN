@@ -186,7 +186,7 @@ def generate_pdf(request):
         shutil.copy2(path, temp_path)
         return temp_path
 
-    data = PCN.objects.all()
+    data = PCN.objects.all()[924:]
     FLNAME = settings.FLNAME
     for i in data:
         
@@ -216,24 +216,29 @@ def generate_pdf(request):
             # justify
             p.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
             #bold
-            if j.startswith(i.owner.split()[0]) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
+            # if j.startswith(i.owner.split()[0]) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
                 
-                p.runs[0].font.bold = True
-                p.runs[0].font.underline = True
+            #     p.runs[0].font.bold = True
+            #     p.runs[0].font.underline = True
             
             # align center
         # save mydoc as pdf
-        mydoc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
-        # convert docx to pdf
-        # doc = docx.Document(f"{i.owner}_{i.location}.docx")
-        convert(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx", f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf")
-        # doc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.pdf")
-        # delete docx file
-        os.remove(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
-        # send pdf to user
-        # mydoc.save(f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf", format='application/pdf')
+        try:
+            mydoc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+            # convert docx to pdf
+            # doc = docx.Document(f"{i.owner}_{i.location}.docx")
+            convert(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx", f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf")
+            # doc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.pdf")
+            # delete docx file
+            try:
+                os.remove(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+            except:
+                pass
+            # send pdf to user
+            # mydoc.save(f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf", format='application/pdf')
 
-        
+        except:
+            pass        
 
         #convert a single docx file to pdf file in same directory
 
