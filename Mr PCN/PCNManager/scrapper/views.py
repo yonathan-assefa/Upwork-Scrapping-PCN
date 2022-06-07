@@ -186,43 +186,57 @@ def generate_pdf(request):
         shutil.copy2(path, temp_path)
         return temp_path
 
-    data = PCN.objects.all()[924:]
+    data = PCN.objects.all()[4150:]
     FLNAME = settings.FLNAME
     for i in data:
-        
-        
         mydoc = docx.Document(create_temporary_copy(FLNAME))
-        x = mydoc.add_paragraph("WRITTEN CONSENT")
-
-        par = [f"I, __{i.owner}__ owner (and/or authorized representative of Florida Limited Liability Company or Florida Corporation owning a LOT in Boca Pointe Community Association) of LOT __{i.location}__ with legal description of: __{' '.join(i.legal_description.split())}__ in Boca Pointe Community Association Inc. hereby gives consent for revival of the Declaration of Covenants, Conditions, Restrictions and Easements of Boca Pointe Community Association pursuant to section 720.405(6), Florida Statutes.", "Owner (or authorization representative of Florida entity owning a property / LOT in Boca Pointe Community Association",
+        h = mydoc.add_paragraph("WRITTEN CONSENT")
+        # bold h
+        h.runs[0].bold = True
+        h.runs[0].font.name = 'Garamond'
+        h.runs[0].font.size = docx.shared.Pt(12)
+        h.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER
+        x =  mydoc.add_paragraph("")
+        par = ["I, ", ' '.join(i.owner.split()[1::-1] + i.owner.split()[2:])," owner (and/or authorized representative of Florida Limited Liability Company or Florida Corporation owning a LOT in Boca Pointe Community Association) of LOT ", str(i.location), " with legal description of: ",' '.join(i.legal_description.split()), " in Boca Pointe Community Association Inc. hereby gives consent for revival of the Declaration of Covenants, Conditions, Restrictions and Easements of Boca Pointe Community Association pursuant to section 720.405(6), Florida Statutes.", "Owner (or authorization representative of Florida entity owning a property / LOT in Boca Pointe Community Association",
         "Signature: ______________________________",
-        f"Print Name: __{i.owner}__      Date:  _____________________",
+        "Print Name: ",' '.join(i.owner.split()[1::-1] + i.owner.split()[2:]) ,"      Date:  _____________________",
         "Title:Owner",
         "Florida Limited Liability Company name (if applicable):  ______________________________"
         ]
         # font style for x
-        x.runs[0].font.name = 'Garamond'
-        x.runs[0].font.size = docx.shared.Pt(12)
-        x.runs[0].font.bold = True
+
         # align center
-        x.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER
 
         for j in par:
             # font style for x
             # avoid new lines
-            p = mydoc.add_paragraph(j, style='Normal')
-            p.runs[0].font.name = 'Garamond'
-            p.runs[0].font.size = docx.shared.Pt(12)
-            # justify
-            p.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+            if j.startswith("Owner") or j.startswith("Signature") or j.startswith("Florida Limited Liability") or j.startswith("Print Name:") or j.startswith("Title:Owner"):
+                x =  mydoc.add_paragraph("")
+            try:
+                if j.startswith(' '.join(i.owner.split()[1::-1] + i.owner.split()[2:])) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
+                    run = x.add_run(j)
+                    # underline run
+                    run.font.underline = True
+                    # p.runs[0].font.bold = True
+                    # p.runs[0].font.underline = True
+                    run.font.name = 'Garamond'
+                    run.font.size = docx.shared.Pt(12)
+                    # justify
+                    # run.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+                else:
+                    run = x.add_run(j)
+                    run.font.name = 'Garamond'
+                    run.font.size = docx.shared.Pt(12)
+                    # justify
+                    # run.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+                # justify x
+                x.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+            except:
+                pass
             #bold
-            # if j.startswith(i.owner.split()[0]) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
-                
-            #     p.runs[0].font.bold = True
-            #     p.runs[0].font.underline = True
-            
             # align center
         # save mydoc as pdf
+
         try:
             mydoc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
             # convert docx to pdf
