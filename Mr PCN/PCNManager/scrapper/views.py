@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 
 from django.views.generic import View
 from django.views.generic.list import ListView
+from urllib3 import HTTPResponse
 
 
 import docx
@@ -173,7 +174,7 @@ class FillEmailView(View):
 
 class PCNListView(ListView):
     model = PCN
-    # paginate_by = 100
+    paginate_by = 100
     template_name = 'pcn_list.html'
     context_object_name = 'pcn_list'
 
@@ -186,7 +187,7 @@ def generate_pdf(request):
         shutil.copy2(path, temp_path)
         return temp_path
 
-    data = PCN.objects.all()[4150:]
+    data = PCN.objects.all()
     FLNAME = settings.FLNAME
     for i in data:
         mydoc = docx.Document(create_temporary_copy(FLNAME))
@@ -197,9 +198,11 @@ def generate_pdf(request):
         h.runs[0].font.size = docx.shared.Pt(12)
         h.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER
         x =  mydoc.add_paragraph("")
-        par = ["I, ", ' '.join(i.owner.split()[1::-1] + i.owner.split()[2:])," owner (and/or authorized representative of Florida Limited Liability Company or Florida Corporation owning a LOT in Boca Pointe Community Association) of LOT ", str(i.location), " with legal description of: ",' '.join(i.legal_description.split()), " in Boca Pointe Community Association Inc. hereby gives consent for revival of the Declaration of Covenants, Conditions, Restrictions and Easements of Boca Pointe Community Association pursuant to section 720.405(6), Florida Statutes.", "Owner (or authorization representative of Florida entity owning a property / LOT in Boca Pointe Community Association",
+        f_name = ' '.join([i.owner.split()[1::-1][0]] + i.owner.split()[2:] +  [i.owner.split()[1::-1][1]])
+        print(">>"*5,f_name)
+        par = ["I, ", f_name," owner (and/or authorized representative of Florida Limited Liability Company or Florida Corporation owning a LOT in Boca Pointe Community Association) of LOT ", str(i.location), " with legal description of: ",' '.join(i.legal_description.split()), " in Boca Pointe Community Association Inc. hereby gives consent for revival of the Declaration of Covenants, Conditions, Restrictions and Easements of Boca Pointe Community Association pursuant to section 720.405(6), Florida Statutes.", "Owner (or authorization representative of Florida entity owning a property / LOT in Boca Pointe Community Association",
         "Signature: ______________________________",
-        "Print Name: ",' '.join(i.owner.split()[1::-1] + i.owner.split()[2:]) ,"      Date:  _____________________",
+        "Print Name: ",f_name,"      Date:  _____________________",
         "Title:Owner",
         "Florida Limited Liability Company name (if applicable):  ______________________________"
         ]
@@ -213,7 +216,7 @@ def generate_pdf(request):
             if j.startswith("Owner") or j.startswith("Signature") or j.startswith("Florida Limited Liability") or j.startswith("Print Name:") or j.startswith("Title:Owner"):
                 x =  mydoc.add_paragraph("")
             try:
-                if j.startswith(' '.join(i.owner.split()[1::-1] + i.owner.split()[2:])) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
+                if j.startswith(f_name) or j.startswith(i.location.split()[0]) or j.startswith(i.legal_description.split()[0]):
                     run = x.add_run(j)
                     # underline run
                     run.font.underline = True
@@ -238,14 +241,14 @@ def generate_pdf(request):
         # save mydoc as pdf
 
         try:
-            mydoc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+            mydoc.save(f"{settings.PDF_PATH}/{f_name}_{i.location}.docx")
             # convert docx to pdf
             # doc = docx.Document(f"{i.owner}_{i.location}.docx")
-            convert(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx", f"{settings.PDF_PATH}/{'_'.join(i.owner.split())}.pdf")
+            convert(f"{settings.PDF_PATH}/{f_name}_{i.location}.docx", f"{settings.PDF_PATH}/{'_'.join(f_name.split())}.pdf")
             # doc.save(f"{settings.PDF_PATH}/{i.owner}_{i.location}.pdf")
             # delete docx file
             try:
-                os.remove(f"{settings.PDF_PATH}/{i.owner}_{i.location}.docx")
+                os.remove(f"{settings.PDF_PATH}/{f_name}_{i.location}.docx")
             except:
                 pass
             # send pdf to user
@@ -260,5 +263,5 @@ def generate_pdf(request):
         #convert docx to pdf specifying input & output paths
         # convert(FLNAME,f'{settings.PDF_PATH}/{i.owner}.pdf')
         print('>>>>>>>>>>>>>>>>>>')
-
+    return HTTPResponse("...Already Done!")
       
