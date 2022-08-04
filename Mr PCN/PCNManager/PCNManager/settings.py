@@ -75,24 +75,24 @@ WSGI_APPLICATION = 'PCNManager.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-# mysql databse 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'upwork',
-        'USER': 'root',
-        'PASSWORD': 'Yon@3246',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# mysql databse 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'upwork',
+#         'USER': 'root',
+#         'PASSWORD': 'Yon@3246',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 # Password validation
