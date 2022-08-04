@@ -42,7 +42,9 @@ def scrap_data(pcn_list):
         for pages in range(loops):
             try:
                 print("Searching...")
+                # Clicking on the dropdown menu.
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').click()
+                time.sleep(1)
                 s100 = browser.find_element(By.NAME, 'ctl00$MainContent$ddlPgSizeTop').send_keys('100')
                 print("Sorted by 100")
                 time.sleep(2)
@@ -54,32 +56,40 @@ def scrap_data(pcn_list):
 
                 for row in soup.find_all('tr', class_='gridrow2'):
                     t_datas = row.find_all('td')
-                    sc_list.append(t_datas[3].text)
-
+                    print(t_datas)
+                    try:
+                        sc_list.append(t_datas[3].text)
+                    except IndexError:
+                        pass
                 time.sleep(2)
 
                 for row in soup.find_all('tr', class_='gridrowalternate2'):
                     t_datas = row.find_all('td')
-                    sc_list.append(t_datas[3].text)
+                    try:
+                        sc_list.append(t_datas[3].text)
+                    except IndexError:
+                        pass
                 print(sc_list)
 
                 def get_user_info(pc_num):
                     each_url = f'https://www.pbcgov.org/papa/Asps/PropertyDetail/PropertyDetail.aspx?parcel={pc_num}&srchtype=MASTER&srchVal=00-42-47-27-38'
-                    try:
-                        response = requests.get(each_url)
-                        soup = BeautifulSoup(response.text, 'html.parser')
-                        # find specific id
-                        location_address = soup.find('span', id='MainContent_lblLocation').text
-                        pcn = soup.find('span', id='MainContent_lblPCN').text
-                        subdivision = soup.find('span', id='MainContent_lblSubdiv').text
-                        legal_description = soup.find('span', id='MainContent_lblLegalDesc').text
+                    tbs = []
+                    sc_list = []
+                    # try:
+                    response = requests.get(each_url)
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    # find specific id
+                    location_address = soup.find('span', id='MainContent_lblLocation').text
+                    pcn = soup.find('span', id='MainContent_lblPCN').text
+                    subdivision = soup.find('span', id='MainContent_lblSubdiv').text
+                    legal_description = soup.find('span', id='MainContent_lblLegalDesc').text
 
-                        sc_list = []
-            
-                        tbs = soup.find_all("table", {'width':'100%', 'cellspacing':'0', 'cellpadding':'1'})
-                        print(tbs)
-                    except:
-                        print("page unreachable")
+                    
+        
+                    tbs = soup.find_all("table", {'width':'100%', 'cellspacing':'0', 'cellpadding':'1'})
+                    print(tbs)
+                    # except:
+                    #     print("page unreachable")
                     for i in tbs:
                         for m in i.find_all('tr'):
                             for j in m.find_all('td', {'class': 'TDValueLeft', 'colspan': '2'}):
@@ -128,8 +138,10 @@ def scrap_data(pcn_list):
                 for pc_nums in sc_list:
                     time.sleep(2)
                     get_user_info(pc_nums)
-
-                browser.find_element(By.PARTIAL_LINK_TEXT,value="Next").click()
+                try:
+                    browser.find_element(By.PARTIAL_LINK_TEXT,value="Next").click()
+                except:
+                    print("No more next page")
             except InvalidSessionIdException:
                 self.driver.close() 
                 print(">>>>> Selenuim just closed the winwdows..,")
@@ -158,8 +170,10 @@ class ScrapView(View):
                 pcn_list = pcn_csv['pcn'].tolist()
             if pcn:
                 pcn_list.append(pcn)        
-            
-            scrap_data(pcn_list)
+            if pcn_list:
+                scrap_data(pcn_list)
+            else:
+                print("No PCN")
         form = PCNForm(request.POST, request.FILES)
         return render(request, self.template_name, {'form': form})
 
